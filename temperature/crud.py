@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from typing import List
 
 from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from temperature.temp_fetcher import get_temperature
 from temperature import models
 
 
-async def update_temperature_for_all_cities(db: AsyncSession):
+async def update_temperature_for_all_cities(db: AsyncSession) -> List[dict[str, int]]:
     cities = await get_all_cities(db)
     temperatures = await asyncio.gather(*[get_temperature(city.name) for city in cities])
     temperatures = {temp[0]: temp[1] for temp in temperatures}
@@ -40,13 +41,13 @@ async def update_temperature_for_all_cities(db: AsyncSession):
     return response
 
 
-async def get_all_temperature_records(db: AsyncSession):
+async def get_all_temperature_records(db: AsyncSession) -> List[dict[str]]:
     query = select(models.DBTemperature)
     records = await db.execute(query)
     return [record[0] for record in records.fetchall()]
 
 
-async def get_temperature_by_city_id(db: AsyncSession, city_id: int):
+async def get_temperature_by_city_id(db: AsyncSession, city_id: int) -> List[dict[str, int]]:
     query = (
         select(models.DBTemperature).
         filter(models.DBTemperature.city_id == city_id)
